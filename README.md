@@ -16,6 +16,8 @@ This example code provides a vulnerable server program with:
 
 It's primary purpose is to serve as an education tool for DOP.
 
+![Demo](demo.gif)
+
 ## Docker Container
 
 The project includes a Docker environment that contains all the dependencies necessary.

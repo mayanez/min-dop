@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+
+  debian:
+    build:
+      context: .
+      dockerfile: Dockerfile.debian
+    image: debian:min-dop
+    container_name: min-dop-runner
+    working_dir: /repo
+    volumes:
+      - ${REPO_PATH}:/repo
+    tty: true

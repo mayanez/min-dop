@@ -7,7 +7,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 
-//Maximum outstanding connection requests
+// Maximum outstanding connection requests
 #define MAXPENDING        1
 
 #define MAXCONN           1024
@@ -87,6 +87,7 @@ g_var_pp_t g_pp_scratch_buf = &g_p_scratch_buf;
 ////////////////////////////////////////////////////////////////////////////////
 // "STACK" VARIABLES
 // NOTE: This is done to make symbol information more easily available.
+// For our purposes, the overflow would work in the same fashion (whether stack or global).
 char sbuf[VULN_BUF_LEN] = {0};
 volatile var_t padding1 = 0; // NOTE: These are for alignment purposes.
 volatile var_t padding2 = 0; // Different compilers add different padding.
@@ -130,7 +131,6 @@ int checkForInvalidTypes(var_t type, int clientfd)
   int err_no;
 
   // integer underflow
-  // echo 'fcffffff00000000' | xxd -r -p | nc -v 127.0.0.1 1111
   if (type <= 2) {
     err_no = LUT_ERROR_CODES[type];
     printf("[checkForInvalidTypes] ERROR: err_no:%x\n", err_no);
@@ -161,8 +161,6 @@ void getPrivLevel(int clientfd)
 {
   char buffer[20] = {0};
 
-  // echo '0500000000000000' | xxd -r -p | nc -v 127.0.0.1 1111
-
   printf("[getPrivLevel] g_is_root: %x\n", g_is_root);
   if (!g_is_root) {
     sprintf(buffer, "priv:NORMAL\n");
@@ -180,7 +178,6 @@ void setPrivLevel(int s, int clientfd)
 {
   char buffer[20] = {0};
 
-  // echo '06000000bebafeca' | xxd -r -p | nc -v 127.0.0.1 1111
   printf("SECRET?:%d\n", s);
   if (s == SECRET) {
     g_is_root = 1;
@@ -210,6 +207,9 @@ int doListen(int sockfd, var_t *connect_limit)
 }
 
 
+//
+// Main server loop.
+//
 void do_serve(int sockfd)
 {
   var_p_t p_size = 0;
@@ -230,7 +230,6 @@ void do_serve(int sockfd)
     p_size = (var_t *)&sbuf[4];
     p_type = (var_t *)&sbuf[0];
 
-    // CHECK: echo --------AAAABBBBCCCCDDDD | nc -v 127.0.0.1 1111
     readInData(g_clfd, sbuf);                    // memory write safety violation
 
     // DEBUG
@@ -259,9 +258,9 @@ void do_serve(int sockfd)
       break;
     }
 
-    if (*p_type == TYPE_ADD) {                                  // condition
+    if (*p_type == TYPE_ADD) {                                  // DOP: condition
       printf("[do_serve] TYPE_ADD\n");
-      p_srv->v_1 += *p_size;                                    // addition
+      p_srv->v_1 += *p_size;                                    // DOP: addition
     } else if (*p_type == TYPE_GETPRIV) {
       printf("[do_serve] TYPE_GETPRIV\n");
       getPrivLevel(g_clfd);
@@ -273,13 +272,13 @@ void do_serve(int sockfd)
       getG_A(g_clfd);
     } else if (*p_type == TYPE_STORE) {
       printf("[do_serve] TYPE_STORE\n");
-      **(p_srv->pp_b) = *p_g_d;                                 // store
+      **(p_srv->pp_b) = *p_g_d;                                 // DOP: store
     } else if (*p_type == TYPE_LOAD) {
       printf("[do_serve] TYPE_LOAD\n");
-      *p_g_d = **(p_srv->pp_b);                                 // load
+      *p_g_d = **(p_srv->pp_b);                                 // DOP: load
     } else {
       printf("[do_serve] TYPE_ASSIGN\n");
-      p_srv->v_2 = *p_size;                                     // assignment
+      p_srv->v_2 = *p_size;                                     // DOP: assignment
     }
 
     close(g_clfd);

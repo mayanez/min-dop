@@ -1,4 +1,6 @@
-# NOTE: Only works w/ clang 9.0 atm. Need to make sure globals are in defined order.
+# TODO: Only works w/ clang atm.
+# Need to make sure globals are in defined order.
+CC = clang
 CFLAGS = -std=c99 -fno-zero-initialized-in-bss -fno-stack-protector -g3 -gdwarf-2 -O0 -m32
 
 ifdef CODE_COVERAGE
